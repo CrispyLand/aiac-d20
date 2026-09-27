@@ -89,7 +89,7 @@ public record BriefingProperties(
             apiKey = (apiKey == null) ? "" : apiKey.strip();
             endpoint = (endpoint == null || endpoint.isBlank())
                     ? "https://api.cerebras.ai/v1/chat/completions" : endpoint.strip();
-            model = (model == null || model.isBlank()) ? "gpt-oss-20b" : model.strip();
+            model = (model == null || model.isBlank()) ? "gpt-oss-120b" : model.strip();
             maxTokens = (maxTokens <= 0) ? 300 : maxTokens;
             temperature = (temperature < 0) ? 0.3 : temperature;
             timeout = (timeout == null) ? Duration.ofSeconds(20) : timeout;

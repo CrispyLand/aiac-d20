@@ -80,7 +80,7 @@ briefing:
     # Small on purpose. Turning seven numbers into one sentence is a mechanical rewrite, not a
     # reasoning task, and this runs unattended — the model that costs the least to be wrong is the
     # right one. Its own setting, so it cannot inherit whatever the chat was switched to.
-    model: gpt-oss-20b
+    model: gpt-oss-120b
 
     # A sentence or two, and a hard ceiling on what a pathological day can spend. Without a
     # reasoning model consuming the budget on hidden thoughts, the full 300 tokens go to prose.
@@ -105,7 +105,7 @@ notes:
     # Reuses the same key as the briefing narrator.
     api-key: ${CEREBRAS_API_KEY:}
     endpoint: https://api.cerebras.ai/v1/chat/completions
-    model: gpt-oss-20b
+    model: gpt-oss-120b
     # Higher ceiling than the briefing narrator — notes can be several paragraphs.
     max-tokens: 1000
     temperature: 0.5

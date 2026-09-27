@@ -17,7 +17,6 @@ agent:
 
   context:
     windows:
-      "[gpt-oss-20b]": 500
       "[gpt-oss-120b]": 500
       "[qwen/qwen3.8-27b]": 500
       "[qwen/qwen3.6-27b]": 500

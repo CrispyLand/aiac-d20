@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class ContextPlannerTest {
 
     private static final AgentConfig CONFIG = AgentConfig.builder()
-            .model("gpt-oss-20b")
+            .model("gpt-oss-120b")
             .systemPrompt("be brief")
             .maxCompletionTokens(100)
             .build();
@@ -67,7 +67,7 @@ class ContextPlannerTest {
 
         // Groq reports 60 tokens more than the messages alone encode to: that gap is the
         // harmony template, and it is the same on every subsequent call.
-        overhead.observe("gpt-oss-20b", first.countedTokens(), first.countedTokens() + 60);
+        overhead.observe("gpt-oss-120b", first.countedTokens(), first.countedTokens() + 60);
 
         ContextBudget second = planner.plan(CONFIG, Persona.NONE, MemoryState.EMPTY, "hello").budget();
         assertThat(second.calibrated()).isTrue();
@@ -111,7 +111,7 @@ class ContextPlannerTest {
     @Test
     void aPerModelWindowOverridesTheDefault() {
         ContextPlanner planner = new ContextPlanner(new BpeTokenCounter(), new TemplateOverhead(),
-                Map.of("gpt-oss-20b", 8192), 131_072, OverflowPolicy.OFF, 0.8);
+                Map.of("gpt-oss-120b", 8192), 131_072, OverflowPolicy.OFF, 0.8);
 
         assertThat(planner.budget(CONFIG, Persona.NONE, MemoryState.EMPTY).contextWindow()).isEqualTo(8192);
         assertThat(planner.budget(AgentConfig.builder().model("unlisted").build(), Persona.NONE, MemoryState.EMPTY)

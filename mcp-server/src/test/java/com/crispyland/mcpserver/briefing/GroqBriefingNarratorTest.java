@@ -39,7 +39,7 @@ class GroqBriefingNarratorTest {
     }
 
     private static BriefingProperties.Narrator settings(String reasoningEffort) {
-        return new BriefingProperties.Narrator("gsk-test", ENDPOINT, "gpt-oss-20b", 300, 0.3,
+        return new BriefingProperties.Narrator("gsk-test", ENDPOINT, "gpt-oss-120b", 300, 0.3,
                 Duration.ofSeconds(20), reasoningEffort);
     }
 
@@ -64,7 +64,7 @@ class GroqBriefingNarratorTest {
     void theRequestCarriesTheNarratorsOwnModelBudgetAndReasoningEffort() {
         Fixture fixture = fixture();
         fixture.server().expect(requestTo(ENDPOINT))
-                .andExpect(jsonPath("$.model").value("gpt-oss-20b"))
+                .andExpect(jsonPath("$.model").value("gpt-oss-120b"))
                 .andExpect(jsonPath("$.max_tokens").value(300))
                 .andExpect(jsonPath("$.temperature").value(0.3))
                 // The one that has no symptom when it is missing.

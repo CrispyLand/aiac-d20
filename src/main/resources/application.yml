@@ -87,7 +87,6 @@ agent:
   # Offered in the model dropdown on the page (must match what your key can access).
   available-models:
     - gpt-oss-120b
-    - gpt-oss-20b
 
   # Cerebras does not support reasoning_effort — always omit.
   reasoning-efforts:
@@ -155,7 +154,7 @@ agent:
     # The guard is tiered, and this only pays for the top tier. A rule with watched terms that
     # `forbid` outright is settled in Java for nothing; only a `watch` term that actually hit, or
     # a `model` rule that has no terms to hit, is worth a call. Most turns make none.
-    model: gpt-oss-20b
+    model: gpt-oss-120b
     max-tokens: 400
     reasoning-effort: ""
 
@@ -200,7 +199,6 @@ agent:
     # pretend window small enough to hit on camera.
     windows:
       "[gpt-oss-120b]": 50000
-      "[gpt-oss-20b]": 50000
     default-window: 50000
 
     # off  = send anyway and let Groq reject it (shows the raw context_length_exceeded)
@@ -220,7 +218,7 @@ agent:
   facts:
     # Blank = agent.defaults.model. Extraction is a mechanical rewrite, not a reasoning task,
     # so the small model is the right default here for the same reason it is for summaries.
-    model: gpt-oss-20b
+    model: gpt-oss-120b
 
     # Ceiling on the block, and therefore on this segment of every future prompt. Bounding it by
     # count rather than tokens is deliberate: it is a list, and a list that silently loses its
@@ -261,7 +259,7 @@ agent:
 
     # Who writes the notes. Blank = whatever agent.defaults.model is. A small model is usually
     # the right call: summarizing is much easier than answering, and this runs on every 5th turn.
-    model: gpt-oss-20b
+    model: gpt-oss-120b
 
     # Ceiling on the notes, and therefore on this segment of every future prompt. This is the
     # number that makes the cost curve flat instead of quadratic. Without gpt-oss's hidden
