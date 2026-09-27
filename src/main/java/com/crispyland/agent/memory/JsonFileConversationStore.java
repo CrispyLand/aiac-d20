@@ -324,7 +324,22 @@ public class JsonFileConversationStore implements ConversationStore {
                 number(node.path("latencyMillis")),
                 text(node.path("model")),
                 text(node.path("finishReason")),
-                strings(node.path("toolsUsed")));
+                strings(node.path("toolsUsed")),
+                toolSteps(node.path("toolSteps")));
+    }
+
+    private static List<MessageStats.ToolStep> toolSteps(JsonNode node) {
+        if (node.isMissingNode() || !node.isArray()) {
+            return List.of();
+        }
+        List<MessageStats.ToolStep> steps = new ArrayList<>();
+        for (JsonNode s : node) {
+            steps.add(new MessageStats.ToolStep(
+                    text(s.path("name")),
+                    text(s.path("result")),
+                    s.path("failed").booleanValue(false)));
+        }
+        return steps;
     }
 
     private static String text(JsonNode node) {

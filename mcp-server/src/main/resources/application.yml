@@ -100,6 +100,21 @@ briefing:
     # provider is a job that is not collecting.
     timeout: 20s
 
+notes:
+  # Where saveToFile writes. Relative default is correct on a laptop; override to an absolute
+  # path under systemd via NOTES_DIRECTORY.
+  directory: ${NOTES_DIRECTORY:./notes}
+
+  groq:
+    # Reuses the same key as the briefing narrator.
+    api-key: ${GROQ_API_KEY:}
+    model: openai/gpt-oss-20b
+    # Higher ceiling than the briefing narrator — notes can be several paragraphs.
+    max-tokens: 1000
+    temperature: 0.5
+    reasoning-effort: low
+    timeout: 30s
+
 telegram:
   # Both are blank by default: the job still runs without them, the notifier becomes a no-op.
   # Set via environment: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.

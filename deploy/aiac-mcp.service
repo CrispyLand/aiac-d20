@@ -30,6 +30,7 @@ Environment="GOOGLE_TIME_ZONE=Asia/Shanghai"
 # controller's own comment names this as the access-control assumption: only the agent on the
 # same box should be able to reach the admin API.
 Environment="SERVER_ADDRESS=127.0.0.1"
+Environment="NOTES_DIRECTORY=/opt/aiac/notes"
 
 # Telegram delivery. Both must be set for notifications to fire; either missing is a no-op.
 # Add to /opt/aiac/.env:

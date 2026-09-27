@@ -293,6 +293,37 @@
         .turnhead .fork { visibility: hidden; }
         .turn:hover .fork { visibility: visible; }
 
+        /* Tool chain — sits below the message body, visible only when tools ran.
+           Deliberately quieter than the body: it is provenance, not content. */
+        .toolchain {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+            margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);
+            font-size: 11px; color: var(--muted);
+        }
+        .toolchain .chain-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+            margin-right: 4px; white-space: nowrap;
+        }
+        .chain-step {
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .chain-step .tname {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px; font-weight: 600; color: #0b7285;
+            background: #e6fcf5; border: 1px solid #63e6be;
+            border-radius: 4px; padding: 1px 6px;
+        }
+        .chain-step .tname.broke { color: #c92a2a; background: #fff5f5; border-color: #ffc9c9; }
+        .chain-arrow { color: #adb5bd; font-size: 10px; }
+        .dl-link {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px; font-weight: 600;
+            color: #1971c2; background: #e7f5ff; border: 1px solid #74c0fc;
+            border-radius: 4px; padding: 1px 7px;
+            text-decoration: none; white-space: nowrap;
+        }
+        .dl-link:hover { background: #d0ebff; border-color: #4dabf7; }
+
         .bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line);
                  padding: 6px 12px; font-size: 12px; font-weight: 600; }
@@ -922,6 +953,26 @@
                     </span>
                 </div>
                 <div class="body" th:text="${m.content}"></div>
+
+                <!-- Tool chain — shown only on assistant turns that called at least one tool.
+                     Each step is a teal badge. A saveToFile step that succeeded also gets a
+                     download link so the user can grab the file without leaving the page. -->
+                <div class="toolchain"
+                     th:if="${!m.user and m.stats != null and !#lists.isEmpty(m.stats.toolSteps)}">
+                    <span class="chain-label">tools</span>
+                    <th:block th:each="s, i : ${m.stats.toolSteps}">
+                        <span class="chain-arrow" th:unless="${i.first}">→</span>
+                        <span class="chain-step">
+                            <span class="tname" th:text="${s.name}"
+                                  th:classappend="${s.failed} ? 'broke'"></span>
+                            <a th:if="${!s.savedFilename().isEmpty()}"
+                               th:href="'/notes/download?file=' + ${s.savedFilename()}"
+                               class="dl-link"
+                               th:title="'Download ' + ${s.savedFilename()}"
+                               th:text="${s.savedFilename()} + ' ↓'">notes.md ↓</a>
+                        </span>
+                    </th:block>
+                </div>
             </div>
             </div>
         </div>

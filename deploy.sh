@@ -24,7 +24,7 @@ MCP_JAR="$ROOT/mcp-server/target/mcp-server-0.0.1-SNAPSHOT.jar"
 
 # ── 2. Provision directories (idempotent) ─────────────────────────────────────
 echo "==> Creating directories on VPS..."
-ssh "$VPS" "mkdir -p /opt/aiac/mcp/data /opt/aiac/agent/data /opt/aiac/agent/profiles"
+ssh "$VPS" "mkdir -p /opt/aiac/mcp/data /opt/aiac/agent/data /opt/aiac/agent/profiles /opt/aiac/notes"
 
 # ── 3. Install nginx (idempotent) ─────────────────────────────────────────────
 echo "==> Ensuring nginx is installed..."

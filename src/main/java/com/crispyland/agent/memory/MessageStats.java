@@ -10,12 +10,11 @@ import java.util.List;
  * context replayed to produce it), the assistant message carries the completion tokens plus
  * the turn total, latency and finish reason.
  *
- * @param toolsUsed which tools the answer was not written without, in the order they ran, a name
- *                  repeated if it ran twice. This is the one trace of tool use that outlives the
- *                  turn: the calls and their results are request scaffolding and are deliberately
- *                  not kept, but <em>that</em> an answer needed looking something up is a property
- *                  of the answer, and a reader deciding whether to trust a date or a balance wants
- *                  it next to the answer rather than in a log they do not have
+ * @param toolsUsed  which tools ran, in order. Kept for backwards-compatible JSON deserialization
+ *                   of stored messages; derived from {@code toolSteps} on new turns.
+ * @param toolSteps  richer version of {@code toolsUsed}: each step also carries the tool's result
+ *                   text, used by the chat view to show the chain and offer download links.
+ *                   Empty on messages written before this field existed.
  */
 public record MessageStats(
         long promptTokens,
@@ -24,31 +23,60 @@ public record MessageStats(
         long latencyMillis,
         String model,
         String finishReason,
-        List<String> toolsUsed) {
+        List<String> toolsUsed,
+        List<ToolStep> toolSteps) {
+
+    /** One step in a multi-tool chain: what was asked and what came back. */
+    public record ToolStep(String name, String result, boolean failed) {
+
+        /**
+         * The bare filename of a file saved by {@code saveToFile}, or {@code ""} if this step is
+         * not a successful save. Used by the template to build a download link without fragile
+         * string-splitting in Thymeleaf.
+         */
+        public String savedFilename() {
+            if (!"saveToFile".equals(name) || failed) {
+                return "";
+            }
+            if (!result.startsWith("Saved to ")) {
+                return "";
+            }
+            String path = result.substring("Saved to ".length()).strip();
+            int slash = path.lastIndexOf('/');
+            return slash >= 0 ? path.substring(slash + 1) : path;
+        }
+    }
 
     public MessageStats {
-        // Never null, so neither the view nor the store has to ask. An empty list is the honest
-        // reading of both "this turn used no tools" and "this message predates the field".
         toolsUsed = (toolsUsed == null) ? List.of() : List.copyOf(toolsUsed);
+        toolSteps = (toolSteps == null) ? List.of() : List.copyOf(toolSteps);
     }
 
     public static MessageStats forPrompt(long promptTokens, String model) {
-        return new MessageStats(promptTokens, 0, 0, 0, model, "", List.of());
+        return new MessageStats(promptTokens, 0, 0, 0, model, "", List.of(), List.of());
     }
 
     public static MessageStats forCompletion(long completionTokens, long totalTokens,
                                              long latencyMillis, String model, String finishReason) {
         return new MessageStats(0, completionTokens, totalTokens, latencyMillis, model,
-                finishReason, List.of());
+                finishReason, List.of(), List.of());
     }
 
     /**
-     * The same stats, recording what ran. Separate from {@link #forCompletion} because the tool
-     * names are known at a different moment than the usage figures — and because most turns have
-     * none, so the common path should not have to say so.
+     * Records the rich tool steps. Also derives and sets {@code toolsUsed} so the JSON written for
+     * this turn carries both — the view can use either, and the field is always consistent.
      */
+    public MessageStats withToolSteps(List<ToolStep> steps) {
+        List<String> names = steps.stream()
+                .map(s -> s.failed() ? s.name() + " (failed)" : s.name())
+                .toList();
+        return new MessageStats(promptTokens, completionTokens, totalTokens, latencyMillis,
+                model, finishReason, names, steps);
+    }
+
+    /** @deprecated use {@link #withToolSteps} for new code; kept for any call sites not yet migrated */
     public MessageStats withToolsUsed(List<String> tools) {
         return new MessageStats(promptTokens, completionTokens, totalTokens, latencyMillis,
-                model, finishReason, tools);
+                model, finishReason, tools, List.of());
     }
 }

@@ -334,7 +334,7 @@ public class Agent {
                         MessageStats.forCompletion(turnUsage.completionTokens(),
                                         turnUsage.totalTokens(), latencyMillis, effective.model(),
                                         response.finishReason())
-                                .withToolsUsed(toolNames(rounds)))));
+                                .withToolSteps(toolSteps(rounds)))));
 
         return new AgentResult(answer, effective, turnUsage, cumulative, budget,
                 response.finishReason(), latencyMillis, verdict, conversations.history(id),
@@ -780,6 +780,21 @@ public class Agent {
     /** Starts a new dialogue, discarding the message stack. */
     public void reset(String conversationId) {
         conversations.clear(conversationId);
+    }
+
+    /**
+     * Richer version of {@link #toolNames}: captures name + result content so the view can show
+     * what each step produced and offer download links for saved files.
+     */
+    private static List<MessageStats.ToolStep> toolSteps(List<ToolRound> rounds) {
+        List<MessageStats.ToolStep> steps = new ArrayList<>();
+        for (ToolRound round : rounds) {
+            for (ToolResult result : round.results()) {
+                steps.add(new MessageStats.ToolStep(result.name(),
+                        result.content() != null ? result.content() : "", result.failed()));
+            }
+        }
+        return steps;
     }
 
     /**

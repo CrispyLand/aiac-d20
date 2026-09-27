@@ -41,17 +41,15 @@ spring:
               url: http://localhost:8081
               sse-endpoint: /sse
 
-        # A separate block, not another entry above, because the transport is genuinely different:
-        # SSE opens a long-lived stream and gets a session back, streamable HTTP posts JSON-RPC to
-        # one endpoint. Spring autoconfigures each independently and both arrive as McpSyncClient
-        # beans in the same list, which is why McpCatalogue needs no branch for this.
-        streamable-http:
-          connections:
-            frankfurter:
-              # Frankfurter serves MCP at the root, so the endpoint has to be given explicitly —
-              # the default here is /mcp, and leaving it would 404 against this host.
-              url: https://mcp.frankfurter.dev
-              endpoint: /
+        # Frankfurter (currency conversion) is disabled for the notes-pipeline demo: its tool
+        # schemas add ~400 prompt tokens per turn, pushing gpt-oss-20b over its effective limit
+        # before the four-step chain completes. Re-enable by un-commenting the block below.
+        #
+        # streamable-http:
+        #   connections:
+        #     frankfurter:
+        #       url: https://mcp.frankfurter.dev
+        #       endpoint: /
 
 server:
   port: 8080
@@ -70,11 +68,11 @@ agent:
   mcp:
     enabled: true
 
-    # How many times one turn may stop, run what the model asked for, and ask again. Three is
-    # enough for the realistic chains (list the currencies, then convert) and low enough that a
-    # model which has decided to call a tool forever costs four requests rather than a bill.
-    # Hitting the ceiling is logged as a WARN, not silently answered around.
-    max-tool-rounds: 3
+    # How many times one turn may stop, run what the model asked for, and ask again. Five covers
+    # the longest realistic chain (getSchedule → getTasks → summarize → saveToFile, plus the
+    # model's closing response) and is low enough that a runaway model costs six requests
+    # rather than a bill. Hitting the ceiling is logged as a WARN, not silently answered around.
+    max-tool-rounds: 5
 
   api-key: ${GROQ_API_KEY:}                                   # never hardcode the key
   endpoint: https://api.groq.com/openai/v1/chat/completions

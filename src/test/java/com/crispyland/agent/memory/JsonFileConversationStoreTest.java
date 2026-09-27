@@ -65,7 +65,7 @@ class JsonFileConversationStoreTest {
         List<Message> restored = store(20).history("c1");
         assertThat(restored.get(0).stats().promptTokens()).isEqualTo(10);
         assertThat(restored.get(1).stats()).isEqualTo(
-                new MessageStats(0, 5, 15, 380, "openai/gpt-oss-20b", "stop", List.of()));
+                new MessageStats(0, 5, 15, 380, "openai/gpt-oss-20b", "stop", List.of(), List.of()));
     }
 
     /**
