@@ -41,15 +41,17 @@ spring:
               url: http://localhost:8081
               sse-endpoint: /sse
 
-        # Frankfurter (currency conversion) is disabled for the notes-pipeline demo: its tool
-        # schemas add ~400 prompt tokens per turn, pushing gpt-oss-20b over its effective limit
-        # before the four-step chain completes. Re-enable by un-commenting the block below.
-        #
-        # streamable-http:
-        #   connections:
-        #     frankfurter:
-        #       url: https://mcp.frankfurter.dev
-        #       endpoint: /
+        # A separate block, not another entry above, because the transport is genuinely different:
+        # SSE opens a long-lived stream and gets a session back, streamable HTTP posts JSON-RPC to
+        # one endpoint. Spring autoconfigures each independently and both arrive as McpSyncClient
+        # beans in the same list, which is why McpCatalogue needs no branch for this.
+        streamable-http:
+          connections:
+            frankfurter:
+              # Frankfurter serves MCP at the root, so the endpoint has to be given explicitly —
+              # the default here is /mcp, and leaving it would 404 against this host.
+              url: https://mcp.frankfurter.dev
+              endpoint: /
 
 server:
   port: 8080

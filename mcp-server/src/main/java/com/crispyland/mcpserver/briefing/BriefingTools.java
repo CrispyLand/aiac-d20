@@ -42,10 +42,11 @@ public class BriefingTools {
         this.collector = collector;
     }
 
-    // @McpTool disabled — not part of the notes pipeline; re-enable if the agent needs to read
-    // stored briefings directly. Removing it from the offered schema saves ~150 prompt tokens
-    // per turn when all four pipeline tools are active.
-    // @McpTool(name = "getBriefing", ...)
+    @McpTool(name = "getBriefing",
+            description = "Get the stored daily briefing for a day: how many events, how much time "
+                    + "was booked, tasks due and overdue, and a short written summary. Collected "
+                    + "automatically on a schedule, so it describes the day as it was when last "
+                    + "measured. Omit the date for today. Read-only.")
     public String getBriefing(
             @McpToolParam(description = "The day, as an ISO date in yyyy-MM-dd form, e.g. "
                     + "'2026-03-17'. Omit or leave empty for today.", required = false)
@@ -91,8 +92,11 @@ public class BriefingTools {
         return out.toString();
     }
 
-    // @McpTool disabled — same reason as getBriefing above.
-    // @McpTool(name = "getTrend", ...)
+    @McpTool(name = "getTrend",
+            description = "Summarise the stored briefings over the last few days: total events, "
+                    + "total and average booked time, the busiest day, and tasks currently overdue. "
+                    + "Use this for questions about how a week has gone, which no single calendar "
+                    + "lookup can answer. Read-only.")
     public String getTrend(
             @McpToolParam(description = "How many days back to include, counting today. "
                     + "1 to 14; defaults to 7.", required = false) Integer days) {
