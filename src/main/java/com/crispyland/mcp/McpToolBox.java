@@ -88,7 +88,7 @@ public class McpToolBox implements ToolBox {
             // gone away. Told plainly, it usually apologises and answers without the tool.
             log.warn("The model asked for tool '{}', which no connected server offers.", call.name());
             return ToolResult.failed(call, "No connected MCP server offers a tool called '%s'."
-                    .formatted(call.name()));
+                    .formatted(call.name()), "");
         }
         String server = McpCatalogue.label(client);
         try {
@@ -107,11 +107,11 @@ public class McpToolBox implements ToolBox {
             // isError is the server saying "your call was wrong", which is a different thing from
             // the call failing to happen. Both go back to the model; only this one is its fault.
             return Boolean.TRUE.equals(result.isError())
-                    ? ToolResult.failed(call, text)
-                    : ToolResult.of(call, text);
+                    ? ToolResult.failed(call, text, server)
+                    : ToolResult.of(call, text, server);
         } catch (Exception e) {
             log.warn("MCP tool '{}' on '{}' failed: {}", call.name(), server, e.toString());
-            return ToolResult.failed(call, "The tool could not be run: " + e);
+            return ToolResult.failed(call, "The tool could not be run: " + e, server);
         }
     }
 

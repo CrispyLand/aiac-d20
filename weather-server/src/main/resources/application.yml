@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: weather-server
+
+  ai:
+    mcp:
+      server:
+        name: weather-server
+        version: 0.0.1
+        type: SYNC
+
+server:
+  port: 8082
+
+# Default city and timezone used when the caller omits the `city` parameter.
+weather:
+  default-city: Shanghai
+  default-timezone: Asia/Shanghai
+
+logging:
+  level:
+    com.crispyland: INFO

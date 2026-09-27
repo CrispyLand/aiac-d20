@@ -2,7 +2,7 @@
 # Deploy both apps to the Hetzner VPS.
 # Run from the repository root: ./deploy.sh
 # Prerequisites (one-time, on the VPS):
-#   echo 'GROQ_API_KEY=gsk_...' | ssh russell@2.28.124.111 'install -m 600 /dev/stdin /opt/aiac/.env'
+#   echo 'CEREBRAS_API_KEY=csk-...' | ssh russell@2.28.124.111 'install -m 600 /dev/stdin /opt/aiac/.env'
 
 set -euo pipefail
 
@@ -19,12 +19,18 @@ cd "$ROOT/mcp-server"
 mvn -q package -DskipTests
 cd "$ROOT"
 
+echo "==> Building weather server..."
+cd "$ROOT/weather-server"
+mvn -q package -DskipTests
+cd "$ROOT"
+
 AGENT_JAR="$ROOT/target/agent-chat-0.0.1-SNAPSHOT.jar"
 MCP_JAR="$ROOT/mcp-server/target/mcp-server-0.0.1-SNAPSHOT.jar"
+WEATHER_JAR="$ROOT/weather-server/target/weather-server-0.0.1-SNAPSHOT.jar"
 
 # ── 2. Provision directories (idempotent) ─────────────────────────────────────
 echo "==> Creating directories on VPS..."
-ssh "$VPS" "mkdir -p /opt/aiac/mcp/data /opt/aiac/agent/data /opt/aiac/agent/profiles /opt/aiac/notes"
+ssh "$VPS" "mkdir -p /opt/aiac/mcp/data /opt/aiac/agent/data /opt/aiac/agent/profiles /opt/aiac/notes /opt/aiac/weather"
 
 # ── 3. Install nginx (idempotent) ─────────────────────────────────────────────
 echo "==> Ensuring nginx is installed..."
@@ -36,6 +42,9 @@ scp "$AGENT_JAR" "$VPS:/opt/aiac/agent/agent.jar"
 
 echo "==> Uploading MCP server jar ($(du -h "$MCP_JAR" | cut -f1))..."
 scp "$MCP_JAR" "$VPS:/opt/aiac/mcp/mcp-server.jar"
+
+echo "==> Uploading weather server jar ($(du -h "$WEATHER_JAR" | cut -f1))..."
+scp "$WEATHER_JAR" "$VPS:/opt/aiac/weather/weather-server.jar"
 
 # ── 5. Upload Google credentials ──────────────────────────────────────────────
 echo "==> Uploading credentials.json..."
@@ -53,13 +62,15 @@ fi
 
 # ── 7. Install systemd units ──────────────────────────────────────────────────
 echo "==> Installing systemd units..."
-scp "$ROOT/deploy/aiac-mcp.service"   "$VPS:/tmp/aiac-mcp.service"
-scp "$ROOT/deploy/aiac-agent.service" "$VPS:/tmp/aiac-agent.service"
+scp "$ROOT/deploy/aiac-mcp.service"     "$VPS:/tmp/aiac-mcp.service"
+scp "$ROOT/deploy/aiac-weather.service" "$VPS:/tmp/aiac-weather.service"
+scp "$ROOT/deploy/aiac-agent.service"   "$VPS:/tmp/aiac-agent.service"
 ssh "$VPS" "
-    sudo mv /tmp/aiac-mcp.service   /etc/systemd/system/aiac-mcp.service
-    sudo mv /tmp/aiac-agent.service /etc/systemd/system/aiac-agent.service
+    sudo mv /tmp/aiac-mcp.service     /etc/systemd/system/aiac-mcp.service
+    sudo mv /tmp/aiac-weather.service /etc/systemd/system/aiac-weather.service
+    sudo mv /tmp/aiac-agent.service   /etc/systemd/system/aiac-agent.service
     sudo systemctl daemon-reload
-    sudo systemctl enable aiac-mcp aiac-agent
+    sudo systemctl enable aiac-mcp aiac-weather aiac-agent
 "
 
 # ── 8. Install nginx config ───────────────────────────────────────────────────
@@ -86,13 +97,25 @@ ssh "$VPS" "
     done
 "
 
+echo "==> Restarting weather server..."
+ssh "$VPS" "sudo systemctl restart aiac-weather"
+
+echo "==> Waiting for weather server to open its port..."
+ssh "$VPS" "
+    for i in \$(seq 1 20); do
+        ss -tlnp | grep -q ':8082' && echo 'Port 8082 is open.' && break
+        echo \"  attempt \$i/20...\"
+        sleep 2
+    done
+"
+
 echo "==> Restarting agent..."
 ssh "$VPS" "sudo systemctl restart aiac-agent"
 
 # ── 10. Status ────────────────────────────────────────────────────────────────
 echo ""
 echo "==> Done. Services:"
-ssh "$VPS" "sudo systemctl status aiac-mcp aiac-agent --no-pager -l | grep -E 'Loaded|Active|Main PID'"
+ssh "$VPS" "sudo systemctl status aiac-mcp aiac-weather aiac-agent --no-pager -l | grep -E 'Loaded|Active|Main PID'"
 echo ""
-echo "Logs:  ssh $VPS 'journalctl -u aiac-mcp -u aiac-agent -f'"
+echo "Logs:  ssh $VPS 'journalctl -u aiac-mcp -u aiac-weather -u aiac-agent -f'"
 echo "Agent: http://2.28.124.111"

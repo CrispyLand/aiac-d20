@@ -304,6 +304,18 @@ public class JsonFileConversationStore implements ConversationStore {
             ArrayNode used = node.putArray("toolsUsed");
             stats.toolsUsed().forEach(used::add);
         }
+        if (!stats.toolSteps().isEmpty()) {
+            ArrayNode steps = node.putArray("toolSteps");
+            for (MessageStats.ToolStep step : stats.toolSteps()) {
+                ObjectNode s = steps.addObject();
+                s.put("name", step.name());
+                s.put("result", step.result());
+                s.put("failed", step.failed());
+                if (!step.server().isEmpty()) {
+                    s.put("server", step.server());
+                }
+            }
+        }
     }
 
     private static List<Message> readMessages(JsonNode array) {
@@ -337,7 +349,8 @@ public class JsonFileConversationStore implements ConversationStore {
             steps.add(new MessageStats.ToolStep(
                     text(s.path("name")),
                     text(s.path("result")),
-                    s.path("failed").booleanValue(false)));
+                    s.path("failed").booleanValue(false),
+                    text(s.path("server"))));  // "" for records written before this field
         }
         return steps;
     }

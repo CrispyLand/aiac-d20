@@ -21,7 +21,7 @@ class NotesSummarizerTest {
     }
 
     private static NotesProperties.Groq settings(String apiKey) {
-        return new NotesProperties.Groq(apiKey, ENDPOINT, "openai/gpt-oss-20b", 1000, 0.5,
+        return new NotesProperties.Groq(apiKey, ENDPOINT, "gpt-oss-20b", 1000, 0.5,
                 Duration.ofSeconds(30), "low");
     }
 
@@ -59,7 +59,7 @@ class NotesSummarizerTest {
     void theRequestCarriesModelBudgetAndReasoningEffort() {
         Fixture fixture = fixture("gsk-test");
         fixture.server().expect(requestTo(ENDPOINT))
-                .andExpect(jsonPath("$.model").value("openai/gpt-oss-20b"))
+                .andExpect(jsonPath("$.model").value("gpt-oss-20b"))
                 .andExpect(jsonPath("$.max_tokens").value(1000))
                 .andExpect(jsonPath("$.temperature").value(0.5))
                 .andExpect(jsonPath("$.reasoning_effort").value("low"))

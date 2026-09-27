@@ -791,7 +791,9 @@ public class Agent {
         for (ToolRound round : rounds) {
             for (ToolResult result : round.results()) {
                 steps.add(new MessageStats.ToolStep(result.name(),
-                        result.content() != null ? result.content() : "", result.failed()));
+                        result.content() != null ? result.content() : "",
+                        result.failed(),
+                        result.server() != null ? result.server() : ""));
             }
         }
         return steps;

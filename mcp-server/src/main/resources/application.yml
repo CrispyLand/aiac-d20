@@ -74,24 +74,20 @@ briefing:
   narrator:
     # Never hardcoded, exactly as the agent's agent.api-key. Blank is a supported state: the figures
     # are still collected and stored, and the run is logged as not narrated.
-    api-key: ${GROQ_API_KEY:}
-    endpoint: https://api.groq.com/openai/v1/chat/completions
+    api-key: ${CEREBRAS_API_KEY:}
+    endpoint: https://api.cerebras.ai/v1/chat/completions
 
     # Small on purpose. Turning seven numbers into one sentence is a mechanical rewrite, not a
     # reasoning task, and this runs unattended — the model that costs the least to be wrong is the
     # right one. Its own setting, so it cannot inherit whatever the chat was switched to.
-    model: openai/gpt-oss-20b
+    model: gpt-oss-20b
 
-    # A sentence or two, and a hard ceiling on what a pathological day can spend. On gpt-oss the
-    # hidden reasoning tokens are billed against this same number and spent first, so it covers both.
+    # A sentence or two, and a hard ceiling on what a pathological day can spend. Without a
+    # reasoning model consuming the budget on hidden thoughts, the full 300 tokens go to prose.
     max-tokens: 300
 
-    # Not a tuning knob — this one is load-bearing. Left unset, gpt-oss spent the entire budget
-    # deliberating over a table of seven numbers and returned finish_reason: length with no content,
-    # which reaches the card as a healthy run that merely has no sentence. Measured on the same
-    # prompt: ~700 characters of hidden reasoning without it, ~110 with it. Set to "" for a model
-    # that rejects the parameter (qwen/compound).
-    reasoning-effort: low
+    # Cerebras does not support reasoning_effort — omit it.
+    reasoning-effort: ""
 
     # Low: the prose should describe the figures printed directly above it, not embroider them.
     temperature: 0.3
@@ -107,12 +103,13 @@ notes:
 
   groq:
     # Reuses the same key as the briefing narrator.
-    api-key: ${GROQ_API_KEY:}
-    model: openai/gpt-oss-20b
+    api-key: ${CEREBRAS_API_KEY:}
+    endpoint: https://api.cerebras.ai/v1/chat/completions
+    model: gpt-oss-20b
     # Higher ceiling than the briefing narrator — notes can be several paragraphs.
     max-tokens: 1000
     temperature: 0.5
-    reasoning-effort: low
+    reasoning-effort: ""
     timeout: 30s
 
 telegram:

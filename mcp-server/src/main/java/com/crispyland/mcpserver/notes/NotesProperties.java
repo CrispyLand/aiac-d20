@@ -42,8 +42,8 @@ public record NotesProperties(String directory, Groq groq) {
         public Groq {
             apiKey = (apiKey == null) ? "" : apiKey.strip();
             endpoint = (endpoint == null || endpoint.isBlank())
-                    ? "https://api.groq.com/openai/v1/chat/completions" : endpoint.strip();
-            model = (model == null || model.isBlank()) ? "openai/gpt-oss-20b" : model.strip();
+                    ? "https://api.cerebras.ai/v1/chat/completions" : endpoint.strip();
+            model = (model == null || model.isBlank()) ? "gpt-oss-20b" : model.strip();
             maxTokens = (maxTokens <= 0) ? 1000 : maxTokens;
             temperature = (temperature < 0) ? 0.5 : temperature;
             timeout = (timeout == null) ? Duration.ofSeconds(30) : timeout;

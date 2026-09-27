@@ -105,7 +105,7 @@ class AgentTest {
     void unsetParametersFallBackToDefaults() {
         AgentResult result = agent.handle(C1, Persona.NONE, "  hi  ", AgentConfig.builder().temperature(0.2).build());
 
-        assertThat(client.last.model()).isEqualTo("openai/gpt-oss-20b");
+        assertThat(client.last.model()).isEqualTo("gpt-oss-20b");
         assertThat(client.last.temperature()).isEqualTo(0.2);
         assertThat(client.last.maxCompletionTokens()).isEqualTo(256);
         assertThat(result.answer()).isEqualTo("reply 1");
@@ -161,7 +161,7 @@ class AgentTest {
         assertThat(transcript.get(0).stats().completionTokens()).isZero();
         assertThat(transcript.get(1).stats().completionTokens()).isEqualTo(5);
         assertThat(transcript.get(1).stats().totalTokens()).isEqualTo(15);
-        assertThat(transcript.get(1).stats().model()).isEqualTo("openai/gpt-oss-20b");
+        assertThat(transcript.get(1).stats().model()).isEqualTo("gpt-oss-20b");
         assertThat(transcript.get(1).stats().finishReason()).isEqualTo("stop");
     }
 
@@ -1209,7 +1209,7 @@ class AgentTest {
         // Posting it back unchanged has to be a no-op, not an override.
         assertThat(agent.effectiveConfig(Persona.of(RUSSELL), shown)).isEqualTo(shown);
         // What the profile says nothing about still comes from the yml.
-        assertThat(shown.model()).isEqualTo("openai/gpt-oss-20b");
+        assertThat(shown.model()).isEqualTo("gpt-oss-20b");
         assertThat(shown.systemPrompt()).isEqualTo("be brief");
     }
 
@@ -1399,9 +1399,9 @@ class AgentTest {
     /** Keep the last 2 messages verbatim and fold once {@code compressEvery} pile up behind them. */
     private static AgentProperties properties(int compressEvery) {
         return new AgentProperties("test-key", "https://example.invalid",
-                Duration.ofSeconds(1), Duration.ofSeconds(1), List.of("openai/gpt-oss-20b"),
+                Duration.ofSeconds(1), Duration.ofSeconds(1), List.of("gpt-oss-20b"),
                 List.of("", "low", "medium", "high"),
-                new AgentProperties.Defaults("openai/gpt-oss-20b", "be brief", 1.0, 256,
+                new AgentProperties.Defaults("gpt-oss-20b", "be brief", 1.0, 256,
                         "", List.of(), ""),
                 new AgentProperties.Limit(100), new AgentProperties.Limit(0),
                 new AgentProperties.Memory(20, "memory", "", ""),

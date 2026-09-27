@@ -26,8 +26,12 @@ public record MessageStats(
         List<String> toolsUsed,
         List<ToolStep> toolSteps) {
 
-    /** One step in a multi-tool chain: what was asked and what came back. */
-    public record ToolStep(String name, String result, boolean failed) {
+    /**
+     * One step in a multi-tool chain: what was asked and what came back.
+     *
+     * @param server the MCP server label, e.g. "calendar" or "weather". Empty string when unknown.
+     */
+    public record ToolStep(String name, String result, boolean failed, String server) {
 
         /**
          * The bare filename of a file saved by {@code saveToFile}, or {@code ""} if this step is

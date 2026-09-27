@@ -965,6 +965,8 @@
                         <span class="chain-step">
                             <span class="tname" th:text="${s.name}"
                                   th:classappend="${s.failed} ? 'broke'"></span>
+                            <span th:if="${!#strings.isEmpty(s.server)}"
+                                  class="where" th:text="'[' + ${s.server} + ']'"></span>
                             <a th:if="${!s.savedFilename().isEmpty()}"
                                th:href="'/notes/download?file=' + ${s.savedFilename()}"
                                class="dl-link"

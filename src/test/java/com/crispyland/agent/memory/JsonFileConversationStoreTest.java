@@ -58,14 +58,14 @@ class JsonFileConversationStoreTest {
     @Test
     void perMessageStatsRoundTripSoTheRestoredTranscriptStillRenders() {
         store(20).append("c1", List.of(
-                Message.user("hello").withStats(MessageStats.forPrompt(10, "openai/gpt-oss-20b")),
+                Message.user("hello").withStats(MessageStats.forPrompt(10, "gpt-oss-20b")),
                 Message.assistant("hi").withStats(
-                        MessageStats.forCompletion(5, 15, 380, "openai/gpt-oss-20b", "stop"))));
+                        MessageStats.forCompletion(5, 15, 380, "gpt-oss-20b", "stop"))));
 
         List<Message> restored = store(20).history("c1");
         assertThat(restored.get(0).stats().promptTokens()).isEqualTo(10);
         assertThat(restored.get(1).stats()).isEqualTo(
-                new MessageStats(0, 5, 15, 380, "openai/gpt-oss-20b", "stop", List.of(), List.of()));
+                new MessageStats(0, 5, 15, 380, "gpt-oss-20b", "stop", List.of(), List.of()));
     }
 
     /**
@@ -77,7 +77,7 @@ class JsonFileConversationStoreTest {
     @Test
     void toolsUsedSurviveTheRestartSoAnOldAnswerStillSaysWhatItLookedUp() {
         store(20).append("c1", List.of(Message.assistant("two events, one task").withStats(
-                MessageStats.forCompletion(5, 15, 380, "openai/gpt-oss-20b", "stop")
+                MessageStats.forCompletion(5, 15, 380, "gpt-oss-20b", "stop")
                         .withToolsUsed(List.of("getSchedule", "getTasks", "getSchedule")))));
 
         assertThat(store(20).history("c1").get(0).stats().toolsUsed())
@@ -88,7 +88,7 @@ class JsonFileConversationStoreTest {
     @Test
     void aMessageWithNoRecordedToolsReadsAsHavingUsedNone() {
         store(20).append("c1", List.of(Message.assistant("hi").withStats(
-                MessageStats.forCompletion(5, 15, 380, "openai/gpt-oss-20b", "stop"))));
+                MessageStats.forCompletion(5, 15, 380, "gpt-oss-20b", "stop"))));
 
         assertThat(store(20).history("c1").get(0).stats().toolsUsed()).isEmpty();
     }

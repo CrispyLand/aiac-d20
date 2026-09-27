@@ -1,10 +1,10 @@
 [Unit]
 Description=AIAC Agent (chat UI)
-After=network.target aiac-mcp.service
-# A soft dependency: the agent starts even if the MCP server failed, because a missing briefing
-# card is better than no chat page. The hard constraint is ordering — if both are starting at
-# boot, the MCP server must have its port open before the agent's MCP client dials it.
-Wants=aiac-mcp.service
+After=network.target aiac-mcp.service aiac-weather.service
+# A soft dependency: the agent starts even if an MCP server failed, because a missing tool is
+# better than no chat page. The hard constraint is ordering — both servers must have their ports
+# open before the agent's MCP client dials them.
+Wants=aiac-mcp.service aiac-weather.service
 
 [Service]
 Type=simple
@@ -12,7 +12,7 @@ User=russell
 
 WorkingDirectory=/opt/aiac/agent
 
-# Shares the same secrets file as the MCP server. Both read GROQ_API_KEY from it.
+# Shares the same secrets file as the MCP server. Both read CEREBRAS_API_KEY from it.
 EnvironmentFile=/opt/aiac/.env
 
 # Bind to loopback — nginx terminates the public connection on port 80 and proxies here.

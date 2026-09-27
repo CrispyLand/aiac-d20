@@ -10,8 +10,8 @@ User=russell
 
 WorkingDirectory=/opt/aiac/mcp
 
-# Secrets live here — GROQ_API_KEY at minimum.
-# Create once: echo 'GROQ_API_KEY=gsk_...' | install -m 600 /dev/stdin /opt/aiac/.env
+# Secrets live here — CEREBRAS_API_KEY at minimum.
+# Create once: echo 'CEREBRAS_API_KEY=csk-...' | install -m 600 /dev/stdin /opt/aiac/.env
 EnvironmentFile=/opt/aiac/.env
 
 # Absolute paths. The YAML defaults are relative to the working directory, which is correct on a

@@ -40,6 +40,9 @@ spring:
             calendar:
               url: http://localhost:8081
               sse-endpoint: /sse
+            weather:
+              url: http://localhost:8082
+              sse-endpoint: /sse
 
         # A separate block, not another entry above, because the transport is genuinely different:
         # SSE opens a long-lived stream and gets a session back, streamable HTTP posts JSON-RPC to
@@ -70,41 +73,32 @@ agent:
   mcp:
     enabled: true
 
-    # How many times one turn may stop, run what the model asked for, and ask again. Five covers
-    # the longest realistic chain (getSchedule → getTasks → summarize → saveToFile, plus the
-    # model's closing response) and is low enough that a runaway model costs six requests
-    # rather than a bill. Hitting the ceiling is logged as a WARN, not silently answered around.
-    max-tool-rounds: 5
+    # How many times one turn may stop, run what the model asked for, and ask again. Eight covers
+    # the Day-20 pipeline: getSchedule → getTasks → getWeather → [frankfurter rate] → summarize
+    # → saveToFile, plus any retry the model makes, and is still low enough that a runaway model
+    # costs nine requests rather than a bill. Hitting the ceiling is logged as a WARN.
+    max-tool-rounds: 8
 
-  api-key: ${GROQ_API_KEY:}                                   # never hardcode the key
-  endpoint: https://api.groq.com/openai/v1/chat/completions
+  api-key: ${CEREBRAS_API_KEY:}                                # never hardcode the key
+  endpoint: https://api.cerebras.ai/v1/chat/completions
   connect-timeout: 10s
   read-timeout: 120s
 
-  # Offered in the model dropdown on the page (must match what your key can access:
-  # GET https://api.groq.com/openai/v1/models).
+  # Offered in the model dropdown on the page (must match what your key can access).
   available-models:
-    - openai/gpt-oss-20b
-    - openai/gpt-oss-120b
-    - qwen/qwen3.8-27b
-    - qwen/qwen3.6-27b
-    - groq/compound-mini
+    - gpt-oss-120b
+    - gpt-oss-20b
 
-  # Offered in the reasoning-effort dropdown. "" means omit the parameter entirely —
-  # required for models that don't support it (qwen, compound, allam).
+  # Cerebras does not support reasoning_effort — always omit.
   reasoning-efforts:
     - ""
-    - low
-    - medium
-    - high
 
   defaults:
-    model: openai/gpt-oss-20b
+    model: gpt-oss-120b
     system-prompt: "You are a concise, helpful assistant. Answer directly and avoid filler. Don't lie and don't create facts. Be honest and tell me you don't know if you have no answer."
     temperature: 1.0
     max-completion-tokens: 1024
-    reasoning-effort: ""            # "" = omit (works on every model) | low | medium | high
-                                    # only openai/gpt-oss-* accept low|medium|high
+    reasoning-effort: ""            # Cerebras does not support this — always omit
     stop-sequences: []              # e.g. ["\n\n", "END"]
     response-schema: ""             # optional JSON schema -> forces structured output
 
@@ -161,9 +155,9 @@ agent:
     # The guard is tiered, and this only pays for the top tier. A rule with watched terms that
     # `forbid` outright is settled in Java for nothing; only a `watch` term that actually hit, or
     # a `model` rule that has no terms to hit, is worth a call. Most turns make none.
-    model: openai/gpt-oss-20b
+    model: gpt-oss-20b
     max-tokens: 400
-    reasoning-effort: low
+    reasoning-effort: ""
 
   # PERSONALIZATION — and note that this is not a fourth memory layer.
   #
@@ -205,12 +199,9 @@ agent:
     # real limits, so overflow is unreachable by hand — see application-demo.yml for a
     # pretend window small enough to hit on camera.
     windows:
-      "[openai/gpt-oss-20b]": 131072
-      "[openai/gpt-oss-120b]": 131072
-      "[qwen/qwen3.8-27b]": 131072
-      "[qwen/qwen3.6-27b]": 131072
-      "[groq/compound-mini]": 131072
-    default-window: 131072
+      "[gpt-oss-120b]": 50000
+      "[gpt-oss-20b]": 50000
+    default-window: 50000
 
     # off  = send anyway and let Groq reject it (shows the raw context_length_exceeded)
     # fail = refuse locally, before the call is paid for, and explain the arithmetic
@@ -229,22 +220,19 @@ agent:
   facts:
     # Blank = agent.defaults.model. Extraction is a mechanical rewrite, not a reasoning task,
     # so the small model is the right default here for the same reason it is for summaries.
-    model: openai/gpt-oss-20b
+    model: gpt-oss-20b
 
     # Ceiling on the block, and therefore on this segment of every future prompt. Bounding it by
     # count rather than tokens is deliberate: it is a list, and a list that silently loses its
     # tail is worse than one that refuses to grow.
     max-facts: 12
 
-    # Ceiling on the extraction reply. Shared with gpt-oss's hidden reasoning tokens, which are
-    # spent first — the same trap that truncated the Day 9 summary into "- Nur,". A truncated
-    # block is data loss here too, because the block is replaced wholesale rather than appended
-    # to, so the extractor refuses a finish_reason=length reply and keeps the previous facts.
+    # Ceiling on the extraction reply. Without gpt-oss hidden reasoning tokens consuming the
+    # budget first, the full 600 tokens go to the fact block itself.
     max-tokens: 600
 
-    # "" omits the parameter (required for qwen/compound). On gpt-oss `low` keeps most of the
-    # ceiling available for the facts themselves.
-    reasoning-effort: low
+    # Cerebras does not support reasoning_effort — always omit.
+    reasoning-effort: ""
 
   # SHORT-TERM MEMORY — how the dialogue stays bounded. max-messages and overflow-policy both
   # shrink the context by forgetting; this rewrites the old turns into notes and sends those
@@ -273,23 +261,15 @@ agent:
 
     # Who writes the notes. Blank = whatever agent.defaults.model is. A small model is usually
     # the right call: summarizing is much easier than answering, and this runs on every 5th turn.
-    model: openai/gpt-oss-20b
+    model: gpt-oss-20b
 
     # Ceiling on the notes, and therefore on this segment of every future prompt. This is the
-    # number that makes the cost curve flat instead of quadratic.
-    #
-    # On a reasoning model this budget is NOT all notes: gpt-oss's hidden reasoning tokens are
-    # billed against the same max_completion_tokens, and they are spent first. At 200 the model
-    # burned the lot thinking and emitted "- Nur," — a summary truncated mid-name, which is worse
-    # than none, because the messages behind it would have been folded away. The compressor now
-    # refuses a finish_reason=length summary, so the failure is a skipped compaction and a WARN
-    # rather than silent data loss — but the budget still has to cover both halves.
+    # number that makes the cost curve flat instead of quadratic. Without gpt-oss's hidden
+    # reasoning tokens competing for this budget, the full 800 tokens go to the notes.
     max-summary-tokens: 800
 
-    # "" omits the parameter (required for qwen/compound, which reject it). On gpt-oss, `low`
-    # is what keeps most of the ceiling above available for the notes themselves: taking
-    # minutes is not a reasoning-heavy task, and the output is bullet points, not an argument.
-    reasoning-effort: low
+    # Cerebras does not support reasoning_effort — always omit.
+    reasoning-effort: ""
 
 logging:
   level:

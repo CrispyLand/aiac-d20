@@ -1,0 +1,32 @@
+[Unit]
+Description=AIAC Weather MCP Server (Open-Meteo, no API key required)
+After=network.target
+# The agent's MCP client does not recover from a server that is down at connect time.
+# Starting this unit first is the only mitigation.
+
+[Service]
+Type=simple
+User=russell
+
+WorkingDirectory=/opt/aiac/weather
+
+# No secrets required — Open-Meteo is a public API. The env file is still listed because
+# the unit shares the same file as the other two, and a missing EnvironmentFile is a startup
+# failure; an extra variable that nothing reads is not.
+EnvironmentFile=/opt/aiac/.env
+
+# Bind to loopback. The weather server has no admin endpoints and no credentials to protect,
+# but there is no reason to expose it to the internet when only the agent on this box reads it.
+Environment="SERVER_ADDRESS=127.0.0.1"
+
+ExecStart=/usr/bin/java -jar /opt/aiac/weather/weather-server.jar
+
+Restart=on-failure
+RestartSec=15
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aiac-weather
+
+[Install]
+WantedBy=multi-user.target

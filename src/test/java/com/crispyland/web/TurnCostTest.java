@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /** The growth table is a view, so the only thing to prove is that it reads the stack correctly. */
 class TurnCostTest {
 
-    private static final String MODEL = "openai/gpt-oss-20b";
+    private static final String MODEL = "gpt-oss-20b";
 
     @Test
     @DisplayName("an empty dialogue has no cost to show")

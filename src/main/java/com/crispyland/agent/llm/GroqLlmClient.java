@@ -38,7 +38,7 @@ public class GroqLlmClient implements LlmClient {
     @Override
     public ChatResponse complete(ChatRequest request) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new LlmException("GROQ_API_KEY is not set — export it and restart the app.");
+            throw new LlmException("CEREBRAS_API_KEY is not set — export it and restart the app.");
         }
 
         String payload = mapper.writeValueAsString(toJson(request));
@@ -55,12 +55,12 @@ public class GroqLlmClient implements LlmClient {
                     .onStatus(status -> true, (req, res) -> { })
                     .toEntity(String.class);
         } catch (RestClientException e) {
-            throw new LlmException("Could not reach Groq at " + endpoint + ": " + e.getMessage(), e);
+            throw new LlmException("Could not reach LLM API at " + endpoint + ": " + e.getMessage(), e);
         }
 
         String body = response.getBody();
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new LlmException("Groq returned HTTP %s: %s"
+            throw new LlmException("LLM API returned HTTP %s: %s"
                     .formatted(response.getStatusCode().value(), describeError(body)));
         }
         return parse(body);
