@@ -94,7 +94,7 @@ agent:
 
   defaults:
     model: gpt-oss-120b
-    system-prompt: "You are a concise, helpful assistant. Answer directly and avoid filler. Don't lie and don't create facts. Be honest and tell me you don't know if you have no answer."
+    system-prompt: "You are a concise, helpful assistant. Answer directly and avoid filler. Don't lie and don't create facts. Be honest and tell me you don't know if you have no answer. Tool use rule: if the user asked to save something to a file, you must call saveToFile — calling summarize alone is not enough."
     temperature: 1.0
     max-completion-tokens: 1024
     reasoning-effort: ""            # Cerebras does not support this — always omit

@@ -43,7 +43,8 @@ public class NotesTools {
                     + "tools — getSchedule, getTasks, or any text — and optionally describe "
                     + "what to produce (e.g. 'structured meeting agenda', 'bullet-point action "
                     + "list', 'weekly review'). Returns the processed text. Read-only — does "
-                    + "not save anything; use saveToFile to persist the result.")
+                    + "not save anything. If the user asked to save the result, you MUST call "
+                    + "saveToFile immediately after this with the returned text.")
     public String summarize(
             @McpToolParam(description = "The text to process.", required = true)
             String text,
